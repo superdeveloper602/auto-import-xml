@@ -1,7 +1,7 @@
 name: auto-import
 on:
   schedule:
-    # Runs at 5:00 UTC every day
+    # Runs every 5 minutes
     - cron: '*/5 * * * *'
   workflow_dispatch:
   
