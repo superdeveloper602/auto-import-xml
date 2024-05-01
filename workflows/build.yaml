@@ -4,8 +4,14 @@ on:
     # Runs at 5:00 UTC every day
     - cron: '0 5 * * *'
   workflow_dispatch:
-  
 jobs:
+  build:
+    container: gradle:jdk11
+    ...
+    steps:
+      - run: |
+          apt-get update
+          apt-get install --yes --no-install-recommends postgresql-client
   import_data:
     runs-on: ubuntu-latest
 
