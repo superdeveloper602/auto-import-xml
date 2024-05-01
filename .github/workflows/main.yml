@@ -19,7 +19,7 @@ jobs:
         env:
           DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
         run: |
-          psql "postgres://postgres.fbsstbcuoxstmqjgqdwy:${DATABASE_PASSWORD}@aws-0-us-west-1.pooler.supabase.com:5432/postgres" -c "\COPY movies FROM '../temp_data.csv' WITH (FORMAT csv);"
+          psql "postgres://postgres.fbsstbcuoxstmqjgqdwy:${DATABASE_PASSWORD}@aws-0-us-west-1.pooler.supabase.com:5432/postgres" -c "\COPY public.articles(content, title) FROM 'temp_data.csv' WITH (FORMAT csv);"
   import_data:
     runs-on: ubuntu-latest
 
