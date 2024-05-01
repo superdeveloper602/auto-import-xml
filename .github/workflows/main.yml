@@ -11,7 +11,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Install PostgreSQL client
-        run: apt-get install -y postgresql-client
+        run: |
+          apt-get update
+          apt-get install -y postgresql-client
 
       - name: Copy data into PostgreSQL
         env:
