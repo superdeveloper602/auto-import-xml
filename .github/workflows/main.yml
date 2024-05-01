@@ -8,6 +8,7 @@ on:
 jobs:
   build:
     container: gradle:jdk11
+    runs-on: ubuntu-latest
     steps:
       - run: |
           apt-get update
