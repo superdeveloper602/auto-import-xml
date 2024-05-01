@@ -44,14 +44,3 @@ jobs:
         run: |
           ls -l
           psql "postgres://postgres.fbsstbcuoxstmqjgqdwy:${DATABASE_PASSWORD}@aws-0-us-west-1.pooler.supabase.com:5432/postgres" -c "\COPY public.articles(content, title) FROM 'temp_data.csv' WITH (FORMAT csv);"
-  import_data:
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
-      
-      env:
-        SUPABASE_ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
-        SUPABASE_DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-        PROJECT_ID: ${{ secrets.PROJECT_ID}}
