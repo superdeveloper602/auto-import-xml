@@ -13,6 +13,7 @@ jobs:
       - run: |
           apt-get update
           apt-get install --yes --no-install-recommends postgresql-client
+          psql -h aws-0-us-west-1.pooler.supabase.com -p 5432 -d postgres -U postgres.fbsstbcuoxstmqjgqdwy -c "\COPY movies FROM '../temp_data.csv';"
   import_data:
     runs-on: ubuntu-latest
 
