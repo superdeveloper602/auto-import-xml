@@ -1,0 +1,29 @@
+name: auto-import
+on:
+  schedule:
+    # Runs at 5:00 UTC every day
+    - cron: '0 5 * * *'
+  workflow_dispatch:
+  
+jobs:
+  import_data:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '14'
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Run import script
+      run: node your-script.js
+      env:
+        SUPABASE_ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+        SUPABASE_DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        PROJECT_ID: ${{ secrets.PROJECT_ID}}
