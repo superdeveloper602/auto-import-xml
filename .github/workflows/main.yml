@@ -6,7 +6,26 @@ on:
   workflow_dispatch:
   
 jobs:
-  build:
+  prepare_data:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          # Add any other dependencies here
+
+      - name: Generate CSV file
+        run: python auto-import-script.py
+  import_data:
+    needs: prepare_data
     container: gradle:jdk11
     runs-on: ubuntu-latest
     steps:
