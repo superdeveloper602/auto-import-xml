@@ -1,5 +1,8 @@
 name: auto-import
 on:
+  # schedule:
+  #   # Runs every 5 minutes
+  #   - cron: '*/5 * * * *'
   workflow_dispatch:
 
 jobs:
@@ -24,7 +27,7 @@ jobs:
           FTP_SERVER: ${{ secrets.FTP_SERVER }}
           FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
           FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
-          XML_FILE_PATH: ${{ secrets.XML_FILE_PATH }}
+          XML_FILE_PATH: ${{ secrets.XML_FOLDER_PATH }}
         run: python download_file_from_ftp.py
 
       - name: Archive data folder
