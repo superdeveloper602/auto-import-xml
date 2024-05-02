@@ -28,6 +28,7 @@ jobs:
           FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
           FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
           XML_FILE_PATH: ${{ secrets.XML_FOLDER_PATH }}
+          IS_TESTING: ${{ secrets.IS_TESTING }}
         run: python download_file_from_ftp.py
 
       - name: Archive data folder
