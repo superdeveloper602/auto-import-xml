@@ -27,6 +27,12 @@ jobs:
           XML_FILE_PATH: ${{ secrets.XML_FILE_PATH }}
         run: python download_file_from_ftp.py
 
+      - name: Archive data folder
+        uses: actions/upload-artifact@v2
+        with:
+          name: data-folder
+          path: data/
+
   prepare_data:
     needs: fetch_files
     runs-on: ubuntu-latest
@@ -34,16 +40,34 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
+      - name: Download archived data folder
+        uses: actions/download-artifact@v2
+        with:
+          name: data-folder
+          path: data
+
       - name: Generate CSV file
         run: python auto-import-script.py
 
+      - name: Archive CSV file
+        uses: actions/upload-artifact@v2
+        with:
+          name: temp-csv
+          path: temp_data.csv
+
   import_data:
     needs: prepare_data
-    container: gradle:jdk11
     runs-on: ubuntu-latest
+    container: gradle:jdk11
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+
+      - name: Download archived CSV file
+        uses: actions/download-artifact@v2
+        with:
+          name: temp-csv
+          path: .  # Downloads to current directory
         
       - name: Install PostgreSQL client
         run: |
@@ -54,13 +78,4 @@ jobs:
         env:
           DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
         run: |
-          psql "postgres://postgres:${DATABASE_PASSWORD}@aws-0-us-west-1.pooler.supabase.com:5432/postgres" -c "\COPY public.articles(content, title) FROM 'temp_data.csv' WITH (FORMAT csv);"
-
-  cleanup:
-    needs: import_data
-    runs-on: ubuntu-latest
-    steps:
-      - name: Remove temporary files
-        run: |
-          rm -rf ./data
-          rm -f temp_data.csv
+          psql "postgres://postgres.fbsstbcuoxstmqjgqdwy:${DATABASE_PASSWORD}@aws-0-us-west-1.pooler.supabase.com:5432/postgres" -c "\COPY public.articles(content, title) FROM 'temp_data.csv' WITH (FORMAT csv);"
