@@ -38,9 +38,20 @@ def extract_content(box):
     return ' '.join(contents)
 
 def write_to_csv(articles, file_path):
-    # Check if the file exists to determine if we need to write headers
+    # Determine if the file exists to decide if we need to write headers and to avoid duplicates
     file_exists = os.path.isfile(file_path)
     
+    existing_articles = set()
+    # If file exists, load existing data to check for duplicates
+    if file_exists:
+        try:
+            with open(file_path, mode='r', newline='', encoding='utf-8') as file:
+                reader = csv.DictReader(file)
+                existing_articles = {frozenset(row.items()) for row in reader}
+        except Exception as e:
+            print(f'Error reading existing CSV file: {e}')
+            return
+
     try:
         with open(file_path, mode='a', newline='', encoding='utf-8') as file:
             fieldnames = ['title', 'content']
@@ -50,9 +61,16 @@ def write_to_csv(articles, file_path):
                 writer.writeheader()  # Write header only if the file did not exist
 
             for article in articles:
-                writer.writerow({'title': article['title'], 'content': article['content']})        
+                article_entry = {'title': article['title'], 'content': article['content']}
+                # Convert article entry to a frozen set of items for comparison
+                article_frozen = frozenset(article_entry.items())
+                
+                # Check if the article is already in the existing articles set
+                if article_frozen not in existing_articles:
+                    writer.writerow(article_entry)
+                    existing_articles.add(article_frozen)  # Add this new entry to the set to avoid future duplicates
     except Exception as e:
-        print(f'Error writing CSV file: {e}')
+        print(f'Error writing to CSV file: {e}')
 
 data_folder = './data'
 success_count = 0
