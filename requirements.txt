@@ -1,3 +1,5 @@
 beautifulsoup4
 python-dotenv
 paramiko
+pandas
+xport

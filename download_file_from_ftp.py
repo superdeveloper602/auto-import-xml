@@ -30,8 +30,6 @@ def download_and_extract_files():
     remote_dir = os.getenv('XML_FILE_PATH')
 
     local_dir = './'
-    directory_path = os.path.dirname(remote_dir)
-    file_name = os.path.basename(remote_dir)
 
     if not os.path.exists(local_dir):
         os.makedirs(local_dir)
@@ -44,7 +42,7 @@ def download_and_extract_files():
 
         transport.connect(username=ftp_username, password=ftp_password)
         with paramiko.SFTPClient.from_transport(transport) as sftp:
-            sftp.chdir(directory_path)
+            sftp.chdir(remote_dir)
             file_list = sftp.listdir()
             files_to_download = [f for f in file_list if f.endswith('.tar.gz') or f.endswith('.zip')]
             print(f"Files to download: {files_to_download}")

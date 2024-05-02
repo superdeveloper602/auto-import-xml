@@ -54,6 +54,9 @@ def write_to_csv(articles, file_path):
     except Exception as e:
         print(f'Error writing CSV file: {e}')
 
+data_folder = './data'
+success_count = 0
+failure_count = 0
 
 if not os.path.exists(data_folder):
     os.makedirs(data_folder)
@@ -69,5 +72,5 @@ for file_name in os.listdir(data_folder):
             success_count += 1
         else:
             failure_count += 1
-            
+
 print(f'Processing complete. Success: {success_count}, Failures: {failure_count}')
