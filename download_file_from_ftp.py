@@ -7,6 +7,11 @@ import os
 import paramiko
 import tarfile
 import zipfile
+import datetime
+
+def get_current_date():
+    today = datetime.datetime.now()
+    return today.strftime("%Y-%m-%d")
 
 def extract_file(local_file_path, extract_to):
     if local_file_path.endswith('.tar.gz'):
@@ -28,6 +33,7 @@ def download_and_extract_files():
     ftp_username = os.getenv('FTP_USERNAME')
     ftp_password = os.getenv('FTP_PASSWORD')
     remote_dir = os.getenv('XML_FILE_PATH')
+    is_testing = os.getenv('IS_TESTING')
 
     local_dir = './'
 
@@ -44,7 +50,13 @@ def download_and_extract_files():
         with paramiko.SFTPClient.from_transport(transport) as sftp:
             sftp.chdir(remote_dir)
             file_list = sftp.listdir()
-            files_to_download = [f for f in file_list if f.endswith('.tar.gz') or f.endswith('.zip')]
+            current_date = get_current_date()
+            print("current_date: ", current_date)
+            files_to_download = []
+            if is_testing == 'true':
+                files_to_download = file_list
+            else:
+                files_to_download = [f for f in file_list if (f.endswith('.tar.gz') or f.endswith('.zip')) and current_date in f]
             print(f"Files to download: {files_to_download}")
 
             for file_name in files_to_download:

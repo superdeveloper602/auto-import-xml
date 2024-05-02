@@ -1,8 +1,8 @@
 name: auto-import
 on:
-  # schedule:
-  #   # Runs every 5 minutes
-  #   - cron: '*/5 * * * *'
+  schedule:
+    # Runs at 3 a.m every sunday
+    - cron: '0 3 * * 0'
   workflow_dispatch:
 
 jobs:
