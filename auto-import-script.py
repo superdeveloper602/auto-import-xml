@@ -55,11 +55,11 @@ def write_to_csv(articles, file_path):
         print(f'Error writing CSV file: {e}')
 
 
-# Main execution script
-data_folder = 'data'
-success_count = 0
-failure_count = 0
+if not os.path.exists(data_folder):
+    os.makedirs(data_folder)
+    print(f"Created folder: {data_folder}")
 
+# List and process files in the data folder
 for file_name in os.listdir(data_folder):
     if file_name.endswith('.xml'):
         file_path = os.path.join(data_folder, file_name)
@@ -69,5 +69,5 @@ for file_name in os.listdir(data_folder):
             success_count += 1
         else:
             failure_count += 1
-
+            
 print(f'Processing complete. Success: {success_count}, Failures: {failure_count}')
