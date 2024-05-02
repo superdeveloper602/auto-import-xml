@@ -1,18 +1,17 @@
 import xml.etree.ElementTree as ET
 import csv
+import os
 
-def import_xml_data():
+def import_xml_data(xml_file):
     try:
-        tree = ET.parse('data.xml')
+        tree = ET.parse(xml_file)
         root = tree.getroot()
         articles = process_articles(root)
-        print(articles)
-
-        # Write to CSV
         write_to_csv(articles, 'temp_data.csv')
-        print('Data inserted successfully.')
+        return True
     except Exception as e:
-        print(f'Failed to import XML data: {e}')
+        print(f'Failed to import XML data from {xml_file}: {e}')
+        return False
 
 def process_articles(root):
     articles = []
@@ -20,7 +19,6 @@ def process_articles(root):
     for article in root.findall('.//article'):
       article_id = article.find(".//metadata[@name='ArticleId']").get('value')
     article_name = article.find(".//metadata[@name='Articlename']").get('value')
-    print(f"Article ID: {article_id}, Article Name: {article_name}")
     
     content = ""
     for box in article.findall('.//box'):
@@ -40,14 +38,36 @@ def extract_content(box):
     return ' '.join(contents)
 
 def write_to_csv(articles, file_path):
+    # Check if the file exists to determine if we need to write headers
+    file_exists = os.path.isfile(file_path)
+    
     try:
-        with open(file_path, mode='w', newline='', encoding='utf-8') as file:
-            writer = csv.writer(file)
+        with open(file_path, mode='a', newline='', encoding='utf-8') as file:
+            fieldnames = ['title', 'content']
+            writer = csv.DictWriter(file, fieldnames=fieldnames)
+            
+            if not file_exists:
+                writer.writeheader()  # Write header only if the file did not exist
+
             for article in articles:
-                # Assuming each article is a dict with 'title' and 'content' keys
-                writer.writerow([article['title'], article['content']])
-        print('The CSV file was written successfully')
+                writer.writerow({'title': article['title'], 'content': article['content']})        
     except Exception as e:
         print(f'Error writing CSV file: {e}')
 
-import_xml_data()
+
+# Main execution script
+data_folder = 'data'
+success_count = 0
+failure_count = 0
+
+for file_name in os.listdir(data_folder):
+    if file_name.endswith('.xml'):
+        file_path = os.path.join(data_folder, file_name)
+        print(f'Processing file: {file_path}')
+        success = import_xml_data(file_path)
+        if success:
+            success_count += 1
+        else:
+            failure_count += 1
+
+print(f'Processing complete. Success: {success_count}, Failures: {failure_count}')

@@ -44,3 +44,11 @@ jobs:
         run: |
           ls -l
           psql "postgres://postgres.fbsstbcuoxstmqjgqdwy:${DATABASE_PASSWORD}@aws-0-us-west-1.pooler.supabase.com:5432/postgres" -c "\COPY public.articles(content, title) FROM 'temp_data.csv' WITH (FORMAT csv);"
+  cleanup:
+    needs: import_data
+    runs-on: ubuntu-latest
+    steps:
+      - name: Remove temporary files
+        run: |
+          rm -rf ./data
+          rm -f temp_data.csv

@@ -4,32 +4,64 @@ import xport
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 import os
+import paramiko
+import tarfile
+import zipfile
 
-load_dotenv()
-# FTP Details
-ftp_server = os.getenv('FTP_SERVER')
-ftp_username = os.getenv('FTP_USERNAME')
-ftp_password = os.getenv('FTP_PASSWORD')
-path = os.getenv('XML_FILE_PATH')
+def extract_file(local_file_path, extract_to):
+    if local_file_path.endswith('.tar.gz'):
+        with tarfile.open(local_file_path, 'r:gz') as tar:
+            tar.extractall(path=extract_to)
+            print(f"Extracted {local_file_path} into {extract_to}")
+    elif local_file_path.endswith('.zip'):
+        with zipfile.ZipFile(local_file_path, 'r') as zip_ref:
+            zip_ref.extractall(extract_to)
+            print(f"Extracted {local_file_path} into {extract_to}")
 
-directory_path = os.path.dirname(path)
-file_name = os.path.basename(path)
-print(directory_path, file_name)
+def progress_callback(transferred, total):
+    print(f"Transferred: {transferred}, Total: {total}, Progress: {100 * (transferred / total):.2f}%")
 
-# Connect to FTP and download file
-ftp = ftplib.FTP(ftp_server)
-ftp.login(ftp_username, ftp_password)
-print(ftp.dir())
-ftp.cwd(directory_path)
-with open(file_name, 'wb') as file:
-    ftp.retrbinary("RETR " + file_name, file.write)
-ftp.quit()
+def download_and_extract_files():
+    load_dotenv()
+    # FTP Details
+    ftp_server = os.getenv('FTP_SERVER')
+    ftp_username = os.getenv('FTP_USERNAME')
+    ftp_password = os.getenv('FTP_PASSWORD')
+    remote_dir = os.getenv('XML_FILE_PATH')
 
-# Read the downloaded SAS transport file
-with open(file_name, 'rb') as file:
-    contents = file.read()
+    local_dir = './'
+    directory_path = os.path.dirname(remote_dir)
+    file_name = os.path.basename(remote_dir)
 
-soup = BeautifulSoup(contents, 'xml')
+    if not os.path.exists(local_dir):
+        os.makedirs(local_dir)
 
-with open('data.xml', 'w', encoding='utf-8') as file:
-    file.write(soup.prettify())
+    with paramiko.Transport((ftp_server, 22)) as transport:
+        # Adjust the SFTP session parameters
+        transport.default_window_size = paramiko.common.MAX_WINDOW_SIZE
+        transport.packetizer.REKEY_BYTES = pow(2, 40)  # 1TB max
+        transport.packetizer.REKEY_PACKETS = pow(2, 40)
+
+        transport.connect(username=ftp_username, password=ftp_password)
+        with paramiko.SFTPClient.from_transport(transport) as sftp:
+            sftp.chdir(directory_path)
+            file_list = sftp.listdir()
+            files_to_download = [f for f in file_list if f.endswith('.tar.gz') or f.endswith('.zip')]
+            print(f"Files to download: {files_to_download}")
+
+            for file_name in files_to_download:
+                remote_file_path = file_name
+                local_file_path = os.path.join(local_dir, file_name)
+                sftp.get(remote_file_path, local_file_path, callback=progress_callback)
+                print(f"Downloaded {file_name} to {local_file_path}")
+
+                data_dir = os.path.join(local_dir, 'data')
+                if not os.path.exists(data_dir):
+                    os.makedirs(data_dir)
+                extract_file(local_file_path, data_dir)
+                os.remove(local_file_path)
+            print(f"File downloads and extraction completed successfully.")
+
+
+
+download_and_extract_files()
