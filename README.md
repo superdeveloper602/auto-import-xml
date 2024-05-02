@@ -21,3 +21,13 @@ To add these secrets:
 2. Navigate to **Settings** > **Secrets** > **Actions**.
 3. Click on **New repository secret** for each of the items listed above and add the corresponding values.
 
+### Remove the artifact after 3 days run the import xml
+
+To ensure that artifacts are automatically removed after 3 days, follow these steps to configure the GitHub settings:
+
+1. Go to your repository's settings.
+2. Click on "Actions" in the left sidebar.
+3. Under "Artifact and log retention" section, set the "Artifact retention period" to "3 days".
+4. Click "Save" to apply the changes.
+
+With this setting, GitHub will automatically remove artifacts older than 3 days from your repository. After 3 days, you can run the `import xml` command to process the artifacts before they are removed.
