@@ -15,20 +15,33 @@ def import_xml_data(xml_file):
 
 def process_articles(root):
     articles = []
-    article_list = root.findall('.//articlelist/article')
+    # Iterate over each article found in the root
     for article in root.findall('.//article'):
-      article_id = article.find(".//metadata[@name='ArticleId']").get('value')
-    article_name = article.find(".//metadata[@name='Articlename']").get('value')
-    
-    content = ""
-    for box in article.findall('.//box'):
-        content_elements = box.findall('.//paragraph')
-        for p in content_elements:
+        article_id = article.find(".//metadata[@name='ArticleId']").get('value')
+        
+        # Initialize variables to store the article name and content
+        article_name = None
+        content = ""
+        
+        # First, gather all paragraph elements within the current article
+        paragraphs = article.findall('.//paragraph')
+        
+        # Process each paragraph
+        for i, p in enumerate(paragraphs):
             text = ''.join(p.itertext())
-            content += text
-    articles.append({'title': article_name, 'content': content})
+            
+            # Set the first paragraph as the article name, others as content
+            if i == 0:
+                article_name = text.strip()
+            else:
+                content += text
+        print(f'title: {article_name}, id: {article_id}')
+        # Only append the article if the name has more than one word
+        if len(article_name.split()) > 1:
+            articles.append({'title': article_name, 'content': content})
 
     return articles
+
 
 def extract_content(box):
     contents = []
@@ -46,7 +59,8 @@ def write_to_csv(articles, file_path):
     if file_exists:
         try:
             with open(file_path, mode='r', newline='', encoding='utf-8') as file:
-                reader = csv.DictReader(file)
+                # Adjust the reader to use the custom delimiter
+                reader = csv.DictReader(file, delimiter='~')
                 existing_articles = {frozenset(row.items()) for row in reader}
         except Exception as e:
             print(f'Error reading existing CSV file: {e}')
@@ -55,7 +69,8 @@ def write_to_csv(articles, file_path):
     try:
         with open(file_path, mode='a', newline='', encoding='utf-8') as file:
             fieldnames = ['title', 'content']
-            writer = csv.DictWriter(file, fieldnames=fieldnames)
+            # Adjust the writer to use the custom delimiter
+            writer = csv.DictWriter(file, fieldnames=fieldnames, delimiter='~')
             
             if not file_exists:
                 writer.writeheader()  # Write header only if the file did not exist
