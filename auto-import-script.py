@@ -94,7 +94,7 @@ def process_articles(root):
             paragraphs = article.findall('.//paragraph')
             sports_content = ""
             subheader = ""
-
+            isJournaliste = False
             # Process each paragraph
             for i, p in enumerate(paragraphs):
                 text = ''.join(p.itertext()).strip()
@@ -103,6 +103,15 @@ def process_articles(root):
                     sports_content += text + " "
                 elif style == "400_Actu_Eco%3a420_!_TIT_edito_x04":
                     subheader = text
+                elif style == "200_Texte_de_base%3a211_!_SIG_couleur_x07":
+                    if i == 1 and text.startswith("Journaliste"):
+                        article_name = ""
+                        isJournaliste = True
+                        continue
+                elif style == "100_Titre_chapeau%3a131_!_TIT_15_sec_couleur_x04" and isJournaliste:
+                    article_name += text + " "
+                    continue
+                    
                 
                 first_word = ''
                 # Set the first paragraph as the article name, others as content
