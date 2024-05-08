@@ -2,10 +2,8 @@ import xml.etree.ElementTree as ET
 import csv
 import os
 import re
-import locale
 import datetime
 
-locale.setlocale(locale.LC_TIME, 'fr_FR')
 excludedTextPhrases = ['la météo', 'le top 10']
 multiplePartsTitle = ['1000 vies']
 
