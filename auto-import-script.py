@@ -93,8 +93,7 @@ def process_articles(root):
                     sports_content += text + " "
                 elif style == "400_Actu_Eco%3a420_!_TIT_edito_x04":
                     subheader = text
-                # Check if the first word has an internal uppercase letter
-                split = text.split()
+                
                 first_word = ''
                 # Set the first paragraph as the article name, others as content
                 if i == 0:
@@ -121,12 +120,15 @@ def process_articles(root):
             # Only append the article if the name has more than one word
 
             if len(article_name.split()) > 1:
+                # Check if the first word has an internal uppercase letter
+                temp = article_name
+                split = article_name.split()
                 if len(split) >= 1:
                     if is_valid_separation(article_name):
                         if len(article_name) > 0:
                             temptext = split_mixed_case(article_name)
                             article_name = ' '.join(temptext)
-                articles.append({'title': article_name, 'content': content})
+                articles.append({'title': temp, 'content': content})
         return articles
     except Exception as e:
         print(f'Error processing articles: {e} ,{e.__traceback__.tb_lineno}')
