@@ -4,8 +4,28 @@ import os
 import re
 import datetime
 
-excludedTextPhrases = ['la météo', 'le top 10']
+excludedTextPhrases = ['la météo', 'le top 10', 'à voir']
 multiplePartsTitle = ['1000 vies']
+
+def split_mixed_case(s):
+    # Using regular expression to find words.
+    words = re.sub(r'([A-Z][a-z]*)', r' \1', s).split()
+    # Filter out any words less than 3 characters long
+    filtered_words = [word for word in words if len(word) >= 3]
+    return filtered_words
+
+def is_valid_separation(s):
+    words = split_mixed_case(s)
+    if not words:
+        return False
+    for i, word in enumerate(words):
+        if len(word) < 3:
+            return False
+        if i > 0 and not word[0].isupper():
+            return False
+        if i == 0 and not word[0].isalpha():
+            return False
+    return True
 
 def is_valid_french_date(date_str):
     # French months in order
@@ -75,13 +95,14 @@ def process_articles(root):
                     subheader = text
                 # Check if the first word has an internal uppercase letter
                 split = text.split()
+                first_word = ''
                 if len(split) >= 1:
                     first_word = text.split()[0]  # Get the first word
-                if re.search(r'[A-Z].*[A-Z]', first_word):
-                    # If first word has an internal uppercase, separate it from the rest
-                    separated_first_word = first_word + " " + " ".join(text.split()[1:])
-                    text = separated_first_word
-
+                
+                    if is_valid_separation(first_word):
+                        if len(first_word) > 0:
+                            temptext = split_mixed_case(first_word)
+                            text = ' '.join(temptext)
                 # Set the first paragraph as the article name, others as content
                 if i == 0:
                     if not is_valid_french_date(text.strip()):
@@ -105,6 +126,7 @@ def process_articles(root):
                 article_name += " " + sports_content.strip()
             # print(f'title: {article_name}, id: {article_id}')
             # Only append the article if the name has more than one word
+
             if len(article_name.split()) > 1:
                 articles.append({'title': article_name, 'content': content})
         return articles
