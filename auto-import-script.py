@@ -91,8 +91,7 @@ def process_articles(root):
             content = ""
             
             # First, gather all paragraph elements within the current article
-            
-            paragraphs = article.findall('.//content')
+            paragraphs = article.findall('.//paragraph')
             sports_content = ""
             subheader = ""
             isJournaliste = False
