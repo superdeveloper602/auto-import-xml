@@ -1,6 +1,44 @@
 import xml.etree.ElementTree as ET
 import csv
 import os
+import re
+import locale
+import datetime
+
+locale.setlocale(locale.LC_TIME, 'fr_FR')
+excludedTextPhrases = ['la météo', 'le top 10']
+multiplePartsTitle = ['1000 vies']
+
+def is_valid_french_date(date_str):
+    # French months in order
+    months_fr = ["janvier", "février", "mars", "avril", "mai", "juin",
+                 "juillet", "août", "septembre", "octobre", "novembre", "décembre"]
+
+    # Split the date string into components
+    parts = date_str.strip().split()
+    if len(parts) != 3:
+        return False
+
+    day, month, year = parts
+
+    # Check if the month is valid
+    if month.lower() not in months_fr:
+        return False
+
+    # Check if day and year are integers and within a valid range
+    try:
+        day = int(day)
+        year = int(year)
+        if not (1 <= day <= 31):
+            return False
+        if not (1000 <= year <= 9999):
+            return False
+    except ValueError:
+        return False
+
+    # Additional checks for date validity could include leap year calculations, etc.
+    # For now, this basic check will do
+    return True
 
 def import_xml_data(xml_file):
     try:
@@ -10,37 +48,70 @@ def import_xml_data(xml_file):
         write_to_csv(articles, 'temp_data.csv')
         return True
     except Exception as e:
-        print(f'Failed to import XML data from {xml_file}: {e}')
+        print(f'Failed to import XML data from {xml_file}: {e}, {e.__traceback__.tb_lineno}')
         return False
 
 def process_articles(root):
-    articles = []
-    # Iterate over each article found in the root
-    for article in root.findall('.//article'):
-        article_id = article.find(".//metadata[@name='ArticleId']").get('value')
-        
-        # Initialize variables to store the article name and content
-        article_name = None
-        content = ""
-        
-        # First, gather all paragraph elements within the current article
-        paragraphs = article.findall('.//paragraph')
-        
-        # Process each paragraph
-        for i, p in enumerate(paragraphs):
-            text = ''.join(p.itertext())
+    try:
+        articles = []
+        # Iterate over each article found in the root
+        for article in root.findall('.//article'):
+            article_id = article.find(".//metadata[@name='ArticleId']").get('value')
             
-            # Set the first paragraph as the article name, others as content
-            if i == 0:
-                article_name = text.strip()
-            else:
-                content += text
-        print(f'title: {article_name}, id: {article_id}')
-        # Only append the article if the name has more than one word
-        if len(article_name.split()) > 1:
-            articles.append({'title': article_name, 'content': content})
+            # Initialize variables to store the article name and content
+            article_name = None
+            content = ""
+            
+            # First, gather all paragraph elements within the current article
+            paragraphs = article.findall('.//paragraph')
+            sports_content = ""
+            subheader = ""
 
-    return articles
+            # Process each paragraph
+            for i, p in enumerate(paragraphs):
+                text = ''.join(p.itertext()).strip()
+                style = p.get('style')
+                if style == "600_Sports%3a670_!_INT_enc_x23":
+                    sports_content += text + " "
+                elif style == "400_Actu_Eco%3a420_!_TIT_edito_x04":
+                    subheader = text
+                # Check if the first word has an internal uppercase letter
+                split = text.split()
+                if len(split) >= 1:
+                    first_word = text.split()[0]  # Get the first word
+                if re.search(r'[A-Z].*[A-Z]', first_word):
+                    # If first word has an internal uppercase, separate it from the rest
+                    separated_first_word = first_word + " " + " ".join(text.split()[1:])
+                    text = separated_first_word
+
+                # Set the first paragraph as the article name, others as content
+                if i == 0:
+                    if not is_valid_french_date(text.strip()):
+                        article_name = text.strip()
+                    else:
+                        continue
+                else:
+                    # Append a space only if it's not the first content paragraph
+                    if i > 1:
+                        content += " "
+                    content += text
+            if (article_name == None):
+                continue
+            if article_name.lower() in excludedTextPhrases:
+                continue
+            elif article_name in multiplePartsTitle:
+                ### add the rest of logic
+                if i >= 1:
+                    article_name += " " + subheader
+            elif article_name == "En bref" or article_name == "En bref...":
+                article_name += " " + sports_content.strip()
+            # print(f'title: {article_name}, id: {article_id}')
+            # Only append the article if the name has more than one word
+            if len(article_name.split()) > 1:
+                articles.append({'title': article_name, 'content': content})
+        return articles
+    except Exception as e:
+        print(f'Error processing articles: {e} ,{e.__traceback__.tb_lineno}')
 
 
 def extract_content(box):
