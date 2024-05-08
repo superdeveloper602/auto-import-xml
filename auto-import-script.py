@@ -96,13 +96,6 @@ def process_articles(root):
                 # Check if the first word has an internal uppercase letter
                 split = text.split()
                 first_word = ''
-                if len(split) >= 1:
-                    first_word = text.split()[0]  # Get the first word
-                
-                    if is_valid_separation(first_word):
-                        if len(first_word) > 0:
-                            temptext = split_mixed_case(first_word)
-                            text = ' '.join(temptext)
                 # Set the first paragraph as the article name, others as content
                 if i == 0:
                     if not is_valid_french_date(text.strip()):
@@ -118,16 +111,21 @@ def process_articles(root):
                 continue
             if article_name.lower() in excludedTextPhrases:
                 continue
-            elif article_name in multiplePartsTitle:
+            if article_name in multiplePartsTitle:
                 ### add the rest of logic
                 if i >= 1:
                     article_name += " " + subheader
-            elif article_name == "En bref" or article_name == "En bref...":
+            if article_name == "En bref" or article_name == "En bref...":
                 article_name += " " + sports_content.strip()
             # print(f'title: {article_name}, id: {article_id}')
             # Only append the article if the name has more than one word
 
             if len(article_name.split()) > 1:
+                if len(split) >= 1:
+                    if is_valid_separation(article_name):
+                        if len(article_name) > 0:
+                            temptext = split_mixed_case(article_name)
+                            article_name = ' '.join(temptext)
                 articles.append({'title': article_name, 'content': content})
         return articles
     except Exception as e:
