@@ -116,6 +116,8 @@ def process_articles(root):
                     article_name += " " + subheader
             if article_name == "En bref" or article_name == "En bref...":
                 article_name += " " + sports_content.strip()
+                articles.append({'title': article_name, 'content': content})
+                continue
             # print(f'title: {article_name}, id: {article_id}')
             # Only append the article if the name has more than one word
 
@@ -128,6 +130,7 @@ def process_articles(root):
                         if len(article_name) > 0:
                             temptext = split_mixed_case(article_name)
                             article_name = ' '.join(temptext)
+                            temp = article_name
                 articles.append({'title': temp, 'content': content})
         return articles
     except Exception as e:
