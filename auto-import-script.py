@@ -3,29 +3,39 @@ import csv
 import os
 import re
 import datetime
+import string
 
 excludedTextPhrases = ['la météo', 'le top 10', 'à voir']
 multiplePartsTitle = ['1000 vies']
 
 def split_mixed_case(s):
-    # Using regular expression to find words.
-    words = re.sub(r'([A-Z][a-z]*)', r' \1', s).split()
-    # Filter out any words less than 3 characters long
-    filtered_words = [word for word in words if len(word) >= 3]
-    return filtered_words
+    result = []
+    current_word = ""
+    counter = 0
 
-def is_valid_separation(s):
-    words = split_mixed_case(s)
-    if not words or len(words) < 2:
-        return False
-    for i, word in enumerate(words):
-        if len(word) < 3:
-            return False
-        if i > 0 and not word[0].isupper():
-            return False
-        if i == 0 and not word[0].isalpha():
-            return False
-    return True
+    if len(s) <= 3:
+        return s
+
+    for char in s:
+        if char.isupper() or char in string.punctuation or char.isdigit():
+            if counter < 3 and current_word:
+                return s
+            result.append(current_word)
+            current_word = ""
+            counter = 0
+
+        current_word += char
+        counter += 1
+
+    if counter >= 3:
+        result.append(current_word)
+
+    if len(result) > 1:
+        return " ".join(result)
+    elif len(result) == 1:
+        return result[0]
+    else:
+        return s
 
 def is_valid_french_date(date_str):
     # French months in order
@@ -126,12 +136,9 @@ def process_articles(root):
                 temp = article_name
                 split = article_name.split()
                 if len(split) >= 1:
-                    if is_valid_separation(split[0]):
-                        print(f'Valid separation: {split[0]}')
-                        temptext = split_mixed_case(article_name)
-                        tempFirst = ' '.join(temptext)
-                        split[0] = tempFirst
-                        temp = ' '.join(split)
+                    split[0] = split_mixed_case(split[0])
+                    tempFirst = ' '.join(split)
+                    temp = tempFirst.strip()
                 articles.append({'title': temp, 'content': content})
         return articles
     except Exception as e:
