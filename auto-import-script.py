@@ -126,11 +126,11 @@ def process_articles(root):
                 temp = article_name
                 split = article_name.split()
                 if len(split) >= 1:
-                    if is_valid_separation(article_name):
-                        if len(article_name) > 0:
-                            temptext = split_mixed_case(article_name)
-                            article_name = ' '.join(temptext)
-                            temp = article_name
+                    if is_valid_separation(split[0]):
+                        temptext = split_mixed_case(article_name)
+                        tempFirst = ' '.join(temptext)
+                        split[0] = tempFirst
+                        temp = ' '.join(split)
                 articles.append({'title': temp, 'content': content})
         return articles
     except Exception as e:
