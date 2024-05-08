@@ -16,7 +16,7 @@ def split_mixed_case(s):
 
 def is_valid_separation(s):
     words = split_mixed_case(s)
-    if not words:
+    if not words or len(words) < 2:
         return False
     for i, word in enumerate(words):
         if len(word) < 3:
@@ -127,6 +127,7 @@ def process_articles(root):
                 split = article_name.split()
                 if len(split) >= 1:
                     if is_valid_separation(split[0]):
+                        print(f'Valid separation: {split[0]}')
                         temptext = split_mixed_case(article_name)
                         tempFirst = ' '.join(temptext)
                         split[0] = tempFirst
