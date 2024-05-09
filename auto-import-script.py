@@ -182,7 +182,7 @@ def write_to_csv(articles, file_path):
 
     try:
         with open(file_path, mode='a', newline='', encoding='utf-8') as file:
-            fieldnames = ['title', 'content']
+            fieldnames = ['title', 'content', 'issue_date']
             # Adjust the writer to use the custom delimiter
             writer = csv.DictWriter(file, fieldnames=fieldnames, delimiter='~')
             
@@ -190,7 +190,8 @@ def write_to_csv(articles, file_path):
                 writer.writeheader()  # Write header only if the file did not exist
 
             for article in articles:
-                article_entry = {'title': article['title'], 'content': article['content']}
+                
+                article_entry = {'title': article['title'], 'content': article['content'], 'issue_date': article['issue_date']}
                 # Convert article entry to a frozen set of items for comparison
                 article_frozen = frozenset(article_entry.items())
                 

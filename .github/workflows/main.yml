@@ -2,7 +2,7 @@ name: auto-import
 on:
   schedule:
     # Runs at 3 a.m every sunday
-    - cron: '0 3 * * 0'
+    #- cron: '0 3 * * 0'
   workflow_dispatch:
 
 jobs:
@@ -82,4 +82,4 @@ jobs:
         env:
           DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
         run: |
-          psql "postgres://postgres.fbsstbcuoxstmqjgqdwy:${DATABASE_PASSWORD}@aws-0-us-west-1.pooler.supabase.com:5432/postgres" -c "\COPY public.articles(title, content) FROM 'temp_data.csv' WITH (FORMAT csv, DELIMITER '~');"
+          psql "postgres://postgres.fbsstbcuoxstmqjgqdwy:${DATABASE_PASSWORD}@aws-0-us-west-1.pooler.supabase.com:5432/postgres" -c "\COPY public.articles(title, content, issue_date) FROM 'temp_data.csv' WITH (FORMAT csv, DELIMITER '~');"
