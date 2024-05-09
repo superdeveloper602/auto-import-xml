@@ -92,6 +92,9 @@ def process_articles(root):
             
             # First, gather all paragraph elements within the current article
             paragraphs = article.findall('.//paragraph')
+            
+            issue_date = root.find(".//metadata[@name='Issuedate']").get('value')
+            print(issue_date)
             sports_content = ""
             subheader = ""
             isJournaliste = False
@@ -135,7 +138,7 @@ def process_articles(root):
                     article_name += " " + subheader
             if article_name == "En bref" or article_name == "En bref...":
                 article_name += " " + sports_content.strip()
-                articles.append({'title': article_name, 'content': content})
+                articles.append({'title': article_name, 'content': content, 'issue_date': issue_date})
                 continue
             # print(f'title: {article_name}, id: {article_id}')
             # Only append the article if the name has more than one word
@@ -148,7 +151,7 @@ def process_articles(root):
                     split[0] = split_mixed_case(split[0])
                     tempFirst = ' '.join(split)
                     temp = tempFirst.strip()
-                articles.append({'title': temp, 'content': content})
+                articles.append({'title': temp, 'content': content, 'issue_date': issue_date})
         return articles
     except Exception as e:
         print(f'Error processing articles: {e} ,{e.__traceback__.tb_lineno}')
