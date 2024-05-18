@@ -155,7 +155,7 @@ def get_user_statistics(input_filename, delimiter='~'):
 
 def export_feedback_to_csv(output_filename, filtered_rows, average_ratings):
     with open(output_filename, mode='w', encoding='utf-8', newline='') as outfile:
-        writer = csv.writer(outfile)
+        writer = csv.writer(outfile,delimiter='~')
         writer.writerow(["review", "rating", "positive_points", "negative_points", "suggestions", "sentiment"])
         print('average_ratings: ', average_ratings)
         for row in filtered_rows:
@@ -172,7 +172,7 @@ def export_feedback_to_csv(output_filename, filtered_rows, average_ratings):
 
 def export_article_summary_to_csv(output_filename, article_summaries, average_ratings):
     with open(output_filename, mode='w', encoding='utf-8', newline='') as outfile:
-        writer = csv.writer(outfile)
+        writer = csv.writer(outfile, delimiter='~')
         writer.writerow(["articleId", "averageRating", "reviewsCount", "overallSentiment"])
         print('article_summaries: ', article_summaries)
         for article_summary in article_summaries:
