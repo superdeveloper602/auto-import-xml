@@ -1,8 +1,8 @@
 name: Auto Global Review
 
 on:
-  schedule:
-    - cron: '0 3 * * 6'  # Runs at 3 AM UTC every Saturday
+  # schedule:
+    # - cron: '0 3 * * 6'  # Runs at 3 AM UTC every Saturday
   workflow_dispatch:  # Allows manual triggering of the workflow
 
 jobs:
@@ -17,9 +17,9 @@ jobs:
 
       - name: Retrieve data from PostgreSQL
         env:
-          DATABASE_URL: postgres://postgres.fbsstbcuoxstmqjgqdwy:${DATABASE_PASSWORD}@aws-0-us-west-1.pooler.supabase.com:5432/postgres
+          DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
         run: |
-          psql $DATABASE_URL -c "\COPY (SELECT * FROM public.review WHERE created_at >= CURRENT_TIMESTAMP - INTERVAL '1 week') TO 'reviews.csv' WITH (FORMAT csv, DELIMITER '~');"
+          psql "postgres://postgres.fbsstbcuoxstmqjgqdwy:${DATABASE_PASSWORD}@aws-0-us-west-1.pooler.supabase.com:5432/postgres" -c "\COPY (SELECT * FROM public.review WHERE created_at >= CURRENT_TIMESTAMP - INTERVAL '1 week') TO 'reviews.csv' WITH (FORMAT csv, DELIMITER '~');"
 
       - name: Upload reviews.csv to artifacts
         uses: actions/upload-artifact@v3
