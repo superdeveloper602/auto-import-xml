@@ -1,0 +1,62 @@
+name: Auto Global Review
+
+on:
+  schedule:
+    - cron: '0 3 * * 6'  # Runs at 3 AM UTC every Saturday
+  workflow_dispatch:  # Allows manual triggering of the workflow
+
+jobs:
+  retrieve-data:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install PostgreSQL client
+        run: sudo apt-get install -y postgresql-client
+
+      - name: Retrieve data from PostgreSQL
+        env:
+          DATABASE_URL: postgres://postgres.fbsstbcuoxstmqjgqdwy:${DATABASE_PASSWORD}@aws-0-us-west-1.pooler.supabase.com:5432/postgres
+        run: |
+          psql $DATABASE_URL -c "\COPY (SELECT * FROM public.review WHERE created_at >= CURRENT_TIMESTAMP - INTERVAL '1 week') TO 'reviews.csv' WITH (FORMAT csv, DELIMITER '~');"
+
+      - name: Upload reviews.csv to artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: reviews
+          path: reviews.csv
+
+  process-data:
+    needs: retrieve-data
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Download reviews.csv from artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: reviews
+          path: ./  # Downloads to the root of the runner's workspace
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install openai pandas  # Add other necessary dependencies
+
+      - name: Run data processing script
+        run: python process_reviews.py
+
+      - name: Upload processed files to artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: processed-csv
+          path: |
+            feedback_details.csv
+            article_summary.csv
