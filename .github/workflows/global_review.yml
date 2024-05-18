@@ -51,7 +51,7 @@ jobs:
           pip install openai pandas  # Add other necessary dependencies
 
       - name: Run data processing script
-        run: python process_reviews.py
+        run: python global_review.py
 
       - name: Upload processed files to artifacts
         uses: actions/upload-artifact@v3
