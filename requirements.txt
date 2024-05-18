@@ -3,3 +3,5 @@ python-dotenv
 paramiko
 pandas
 xport
+openai
+pandas
