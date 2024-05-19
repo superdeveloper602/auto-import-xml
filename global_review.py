@@ -28,7 +28,7 @@ def calculate_average_ratings(filtered_rows):
         ratingInformative = float(ratingInformative)
         
         average_rating = (ratingInterest + ratingClearPleasant + ratingInformative) / 3
-        averages[articleId].append(average_rating)
+        averages[articleId].append(round(average_rating,))
     
     # Calculate the mean average rating per article
     average_ratings = {articleId: sum(ratings) / len(ratings) for articleId, ratings in averages.items()}
@@ -37,20 +37,12 @@ def calculate_average_ratings(filtered_rows):
 
 def analyze_content_with_chatgpt(content):
     # Define the questions to ask
-    # print("review: " + content)
-    questions = [
-      "What positive aspects are mentioned?\n",
-      "What negative aspects are mentioned?\n",
-      "What suggestions for improvement are mentioned?\n",
-      "What is the overall sentiment of the review?(positive, negative, neutral)\n"
-    ]
+    print("review: " + content)
     # Prepare the messages for the API request
     messages = [
-      {"role": "system", "content": "You are a helpful assistant."},
-      {"role": "user", "content": f"Please provide unique answers for each question. Each answer should only include its predicate, omitting any unnecessary parts like 'points mentioned:', and don't return irrelevant answers. If there's nothing to contribute, leave the answer empty. Separate answers with a tilde (~) between each question for easier parsing. Here is the review: \"{content}\""}
+      {"role": "system", "content": "Des avis d'utilisateurs vous seront présentés sur un article et votre travail consiste à répondre à chacune des questions suivantes. Les questions sont les suivantes :\n - Quels aspects positifs sont mentionnés ? \n - Quels aspects négatifs sont mentionnés ?\n - Quelles suggestions d'amélioration sont mentionnées ?\n - Quel est le sentiment général de l'avis ? (positif, négatif, neutre)\n. Vous fournirez des réponses uniques à chaque question. Chaque réponse ne doit inclure que son prédicat, en omettant toutes les parties inutiles telles que « points mentionnés : », et ne renvoie pas de réponses non pertinentes et n'ajoute pas de caractère de nouvelle ligne dans chacune de vos réponses. S'il n'y a rien à apporter, laissez la réponse vide. répond avec un tilde (~) ENTRE chaque question pour une analyse plus facile."},
+      {"role": "user", "content": content}
     ]
-    for question in questions:
-        messages.append({"role": "user", "content": question})
     load_dotenv()
     client = OpenAI(
         # This is the default and can be omitted
@@ -60,13 +52,17 @@ def analyze_content_with_chatgpt(content):
     # Call the OpenAI API
     response = client.chat.completions.create(
       messages=messages,
-      model="gpt-3.5-turbo",
+      model="gpt-4",
+      temperature=0.7,
+      max_tokens=64,
+      top_p=1
     )
     # Extract the content from the response
+    print("response:" + str(response.choices))
     content = response.choices[0].message.content
-    # print("content: " + response.choices[0].message.content)
+    print("content: " + response.choices[0].message.content)
     parts = content.split('~')
-    
+    print("parts: " + str(parts))
     # Remove any leading/trailing whitespace and filter out empty parts
     parts = [part.strip() for part in parts if part.strip()]
 
@@ -75,15 +71,19 @@ def analyze_content_with_chatgpt(content):
     negative_points = ""
     positive_points = ""
     sentiment = ""
-    if len(parts) == 4:
-      positive_points, negative_points, suggestions, sentiment = parts
-    if len(parts) == 3:
-      positive_points, negative_points, suggestions = parts
-    if len(parts) == 2:
-      positive_points, negative_points = parts
-    if len(parts) == 1:
+    print("lenparts: " + str(len(parts)))
+    if len(parts) >= 4:
       positive_points = parts[0]
-
+      negative_points = parts[1]
+      suggestions = parts[2]
+      sentiment = parts[-1]
+    elif len(parts) == 3:
+      positive_points, negative_points, sentiment = parts
+    elif len(parts) == 2:
+      positive_points, sentiment = parts
+    elif len(parts) == 1:
+      positive_points = parts[0]
+    print("sentimel: " + sentiment)
     return {
         'positive_points': positive_points,
         'negative_points': negative_points,
@@ -106,7 +106,7 @@ def determine_overall_sentiment(sentiments):
 
 def get_article_review_summary(articleId, reviews_by_article):
     if articleId not in reviews_by_article:
-        return {"articleId": articleId, "total_reviews": 0, "overall_sentiment": "neutral"}
+        return {"articleId": articleId, "total_reviews": 0, "overall_sentiment": "neutre"}
     
     reviews = reviews_by_article[articleId]
     total_reviews = len(reviews)
@@ -117,17 +117,17 @@ def get_article_review_summary(articleId, reviews_by_article):
     for review in reviews:
         sentiments = analyze_content_with_chatgpt(review)
         result = determine_overall_sentiment(sentiments)
-        if result == 'positive':
+        if 'positif' in result.lower() or 'positive' in result.lower():
             count_positive += 1
-        if result == 'negative':
+        if 'négatif' in result.lower() or 'negative' in result.lower():
             count_negative += 1
     
     if count_positive == count_negative:
-      overall_sentiment = "neutral"
+      overall_sentiment = "neutre"
     elif count_positive > count_negative:
-      overall_sentiment = "positive"
+      overall_sentiment = "positif"
     else:
-      overall_sentiment = "negative"
+      overall_sentiment = "négatif"
     
     return {
         "articleId": articleId,
