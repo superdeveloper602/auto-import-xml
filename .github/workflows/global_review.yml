@@ -19,7 +19,7 @@ jobs:
         env:
           DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
         run: |
-          psql "postgres://postgres.fbsstbcuoxstmqjgqdwy:${DATABASE_PASSWORD}@aws-0-us-west-1.pooler.supabase.com:5432/postgres" -c "\COPY (SELECT * FROM public.review INNER JOIN public.articles ON "review.articleId" = articles.id WHERE review.created_at >= CURRENT_TIMESTAMP - INTERVAL '1 week') TO 'reviews.csv' WITH (FORMAT csv, DELIMITER '~');"
+          psql "postgres://postgres.fbsstbcuoxstmqjgqdwy:${DATABASE_PASSWORD}@aws-0-us-west-1.pooler.supabase.com:5432/postgres" -c "\COPY (SELECT * FROM get_weekly_reviews()) TO 'reviews.csv' WITH (FORMAT csv, DELIMITER '~');"
       - name: Upload reviews.csv to artifacts
         uses: actions/upload-artifact@v3
         with:
