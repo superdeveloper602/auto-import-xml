@@ -51,12 +51,12 @@ jobs:
 
       - name: Run data processing script
         env:
-          MAILTRAP_SERVER: ${{ MAILTRAP_SERVER }}
-          MAILTRAP_USERNAME: ${{ MAILTRAP_USERNAME }}
-          MAILTRAP_PASSWORD: ${{ MAILTRAP_PASSWORD }}
-          MAIL_PORT: ${{ MAIL_PORT }}
-          FROM_EMAIL: ${{ FROM_EMAIL }}
-          TO_EMAIL: ${{ TO_EMAIL }}
+          MAILTRAP_SERVER: ${{ secrets.MAILTRAP_SERVER }}
+          MAILTRAP_USERNAME: ${{ secrets.MAILTRAP_USERNAME }}
+          MAILTRAP_PASSWORD: ${{ secrets.MAILTRAP_PASSWORD }}
+          MAIL_PORT: ${{ secrets.MAIL_PORT }}
+          FROM_EMAIL: ${{ secrets.FROM_EMAIL }}
+          TO_EMAIL: ${{ secrets.TO_EMAIL }}
         run: python global_review.py
 
       - name: Upload processed files to artifacts
