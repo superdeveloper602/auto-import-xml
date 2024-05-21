@@ -58,75 +58,6 @@ def remove_newlines(text):
     cleaned_text = text.replace('\n', '')
     return cleaned_text
 
-def analyze_content_with_chatgpt(content):
-    # Define the questions to ask
-    print("review: " + content)
-    # Prepare the messages for the API request
-    messages = [
-      {"role": "system", "content": "Ceci est une liste d'avis sur des articles. Pouvez-vous me lister les points positifs, les points négatifs ainsi que les points à améliorer et le sentiment (positif, négatif ou neutre) ? Affiche uniquement le résultat et non ce sur quoi vous l'avez basé.\nSous cette forme, points_positifs~points_négatifs~points d'amélioration"},
-      {"role": "user", "content": content}
-    ]
-    load_dotenv()
-    client = OpenAI(
-        # This is the default and can be omitted
-        api_key=os.getenv('OPENAI_API_KEY'),
-    )
-    
-    # Call the OpenAI API
-    response = client.chat.completions.create(
-      messages=messages,
-      model="gpt-4",
-      temperature=0.7,
-      max_tokens=64,
-      top_p=1
-    )
-    # Extract the content from the response
-    print("response:" + str(response.choices))
-    content = response.choices[0].message.content
-    print("content_response_feedback: " + response.choices[0].message.content)
-    if '~' in content:
-      parts = content.split('~')
-    else:
-      parts = content.split('\n')
-    print("parts: " + str(parts))
-    # Remove any leading/trailing whitespace and filter out empty parts
-    parts = [part for part in parts if part]
-
-    # Ensure we have exactly three parts (positive, negative, suggestions)
-    suggestions = ""
-    negative_points = ""
-    positive_points = ""
-    sentiment = ""
-    print("lenparts: " + str(len(parts)))
-    if len(parts) >= 4:
-      positive_points = parts[0]
-      negative_points = parts[1]
-      suggestions = parts[2]
-      sentiment = parts[-1]
-    elif len(parts) == 7:
-      positive_points = parts[4]
-      negative_points = parts[5]
-      suggestions = parts[6]
-      sentiment = parts[7]
-    elif len(parts) == 6:
-      positive_points = parts[1]
-      negative_points = parts[3]
-      suggestions = parts[5]
-      sentiment = parts[-1]
-    elif len(parts) == 3:
-      positive_points, negative_points, sentiment = parts
-    elif len(parts) == 2:
-      positive_points, sentiment = parts
-    elif len(parts) == 1:
-      positive_points = parts[0]
-    print("sentimel: " + sentiment)
-    return {
-        'positive_points': positive_points,
-        'negative_points': negative_points,
-        'suggestions': suggestions,
-        'sentiment': sentiment
-    }
-
 def aggregate_reviews_by_article(filtered_rows):
     reviews_by_article = defaultdict(list)
     
@@ -204,28 +135,6 @@ def get_article_review_summary(articleId, reviews_by_article):
     positive_points = []
     negative_points = []
     suggestions = []
-    # for review in reviews:
-    #     reviews.append(review[0])
-    #     # sentiments = analyze_content_with_chatgpt(review[0])
-    #     # result = determine_overall_sentiment(sentiments)
-    #     # positive_points.append(sentiments['positive_points'])
-    #     # negative_points.append(sentiments['negative_points'])
-    #     # print("suggestions: " + sentiments['suggestions'])
-    #     # suggestions.append(sentiments['suggestions'])
-    #     # if 'positif' in result.lower() or 'positive' in result.lower():
-    #     #     count_positive += 1
-    #     # if 'négatif' in result.lower() or 'negative' in result.lower():
-    #     #     count_negative += 1
-
-    # # if count_positive == count_negative:
-    # #   overall_sentiment = "neutre"
-    # # elif count_positive > count_negative:
-    # #   overall_sentiment = "positif"
-    # # else:
-    # #   overall_sentiment = "négatif"
-    
-    # # positive_string = '; '.join(positive_points)
-    # # negative_string = '; '.join(negative_points)
 
     load_dotenv()
     client = OpenAI(
@@ -283,26 +192,61 @@ def get_article_review_summary(articleId, reviews_by_article):
       suggestions = parts[5]
       sentiment = parts[-1]
     elif len(parts) == 3:
-      positive_points, negative_points, sentiment = parts
+      if "Points positifs" in parts[0]:
+        positive_points = parts[0]
+        negative_points = parts[1]
+        suggestions = parts[2]
+        sentiment = "neutre"
+      elif "Points négatifs" in parts[0]:
+        positive_points = " "
+        negative_points = parts[0]
+        suggestions = parts[1]
+        sentiment = parts[2]
+      else:
+        if "Points damélioration" in parts[2] or "Points d'amélioration" in parts[2]:
+          suggestions = parts[2]
+        else:
+          sentiment = parts[2]
+        positive_points = parts[0]
+        negative_points = parts[1]
     elif len(parts) == 2:
-      positive_points, sentiment = parts
+      if "Points positifs" in parts[0]:
+        positive_points = parts[0]
+      elif "Points négatifs" in parts[0]:
+        negative_points = parts[0]
+      sentiment = parts[1]
     elif len(parts) == 1:
       positive_points = parts[0]
-    print("sentimel: " + sentiment)
-    # return {
-    #     'positive_points': positive_points,
-    #     'negative_points': negative_points,
-    #     'suggestions': suggestions,
-    #     'sentiment': sentiment
-    # }
+    
+    positive_points = remove_newlines(positive_points.replace('"', '').replace("'", ''))
+    negative_points = remove_newlines(negative_points.replace('"', '').replace("'", ''))
+    suggestions = remove_newlines(suggestions.replace('"', '').replace("'", ''))
+
+    positive_parts = positive_points.split(':')
+    if len(positive_parts) == 2 and "Points positifs" in positive_parts[0]:
+        positive_points = positive_parts[1]
+    
+    negative_parts = negative_points.split(':')
+    if len(negative_parts) == 2 and "Points négatifs" in negative_parts[0]:
+        negative_points = negative_parts[1]
+    
+    suggestions_parts = suggestions.split(':')
+    if len(suggestions_parts) == 2 and ("Points damélioration" in suggestions_parts[0] or "Points d'amélioration" in suggestions_parts[0]):
+        suggestions = suggestions_parts[1]
+    
+    sentiment = sentiment.split(':')
+    if len(sentiment) == 2 and "Sentiment" in sentiment[0]:
+        sentiment = sentiment[1]
+    if isinstance(sentiment, list):
+      sentiment = ', '.join(sentiment)
     return {
         "articleTitle": articleTitle,  # Assuming the first review is the article title
-        "postive_points": remove_newlines(positive_points.replace('"', '').replace("'", '')),
-        "negative_points": remove_newlines(negative_points.replace('"', '').replace("'", '')),
-        "suggestions": remove_newlines(suggestions.replace('"', '').replace("'", '')),
+        "postive_points": positive_points.strip(),
+        "negative_points": negative_points.strip(),
+        "suggestions": suggestions.strip(),
         "articleId": articleId,
         "total_reviews": total_reviews,
-        "overall_sentiment": sentiment
+        "overall_sentiment": sentiment.strip()
     }
 
 def get_user_statistics(input_filename, delimiter='~'):
