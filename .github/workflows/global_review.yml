@@ -65,15 +65,18 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-      - Download articles_summary.csv from artifacts
+
+      - name: Download articles_summary.csv from artifacts
         uses: actions/download-artifact@v3
         with:
           name: processed-csv
           path: ./  # Downloads to the root of the runner's workspace
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+          
       - name: Send email
         env:
           MAILTRAP_SERVER: ${{ secrets.MAILTRAP_SERVER }}
