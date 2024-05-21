@@ -80,7 +80,7 @@ jobs:
       - name: Send email
         env:
           MAILTRAP_SERVER: ${{ secrets.MAILTRAP_SERVER }}
-          MAILTRAP_USERNAME: ${{ secrets.MAILTRAP_USERNAME }}
+          MAILTRAP_USER: ${{ secrets.MAILTRAP_USER }}
           MAILTRAP_PASSWORD: ${{ secrets.MAILTRAP_PASSWORD }}
           MAIL_PORT: ${{ secrets.MAIL_PORT }}
           FROM_EMAIL: ${{ secrets.FROM_EMAIL }}
