@@ -421,9 +421,11 @@ def main(input_filename, feedback_output_filename, summary_output_filename):
     # Step 6: Export the summary data to a CSV file
     export_article_summary_to_csv(filtered_rows, summary_output_filename, article_summaries)
 
-main(input_filename, feedback_output_filename, summary_output_filename)
 # File names
 input_filename = 'reviews.csv'
 feedback_output_filename = 'feedback_details.csv'
 summary_output_filename = 'article_summary.csv'
+
+main(input_filename, feedback_output_filename, summary_output_filename)
+
 
