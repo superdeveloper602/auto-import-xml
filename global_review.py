@@ -5,11 +5,7 @@ from io import StringIO
 import os
 from collections import defaultdict
 import re
-import smtplib
-from email.mime.multipart import MIMEMultipart
-from email.mime.base import MIMEBase
-from email import encoders
-from email.mime.text import MIMEText
+
 
 def filter_csv_file(input_filename, delimiter='~'):
     filtered_rows = []
@@ -424,57 +420,10 @@ def main(input_filename, feedback_output_filename, summary_output_filename):
     
     # Step 6: Export the summary data to a CSV file
     export_article_summary_to_csv(filtered_rows, summary_output_filename, article_summaries)
-    
+
+main(input_filename, feedback_output_filename, summary_output_filename)
 # File names
 input_filename = 'reviews.csv'
 feedback_output_filename = 'feedback_details.csv'
 summary_output_filename = 'article_summary.csv'
 
-subject = "Global Review"
-body = "This is global review"
-csv_file_name = "./article_summary.csv"
-
-to_email = os.getenv('TO_EMAIL')
-from_email = os.getenv('FROM_EMAIL')
-mailtrap_user = os.getenv('MAILTRAP_USER')
-mailtrap_password = os.getenv('MAILTRAP_PASSWORD')
-mailtrap_server = os.getenv('MAILTRAP_SERVER')
-mail_port = os.getenv('MAIL_PORT')
-
-# main(input_filename, feedback_output_filename, summary_output_filename)
-#send_email_with_attachment(subject, body, to_email, csv_file_name, from_email, mailtrap_user, mailtrap_password)
-
-sender = f"Global Review <{from_email}>"
-receiver = f"<{to_email}>"
-
-# Create a multipart message
-msg = MIMEMultipart()
-msg['From'] = sender
-msg['To'] = receiver
-msg['Subject'] = subject
-
-# Add body to email
-msg.attach(MIMEText(body, 'plain'))
-
-# Open the file to be sent
-with open(csv_file_name, "rb") as attachment:
-    part = MIMEBase('application', 'octet-stream')
-    part.set_payload(attachment.read())
-
-# Encode file in ASCII characters to send by email    
-encoders.encode_base64(part)
-
-# Add header as key/value pair to attachment part
-part.add_header(
-    "Content-Disposition",
-    f"attachment; filename= {os.path.basename(csv_file_name)}",
-)
-
-# Attach the file
-msg.attach(part)
-
-
-with smtplib.SMTP(mailtrap_server, mail_port) as server:
-    server.starttls()
-    server.login(mailtrap_user, mailtrap_password)
-    server.sendmail(sender, receiver, msg.as_string())
