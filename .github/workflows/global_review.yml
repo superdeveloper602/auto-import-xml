@@ -1,8 +1,8 @@
 name: Auto Global Review
 
 on:
-  # schedule:
-    # - cron: '0 3 * * 6'  # Runs at 3 AM UTC every Saturday
+  schedule:
+    - cron: '0 3 * * 6'  # Runs at 3 AM UTC every Saturday
   workflow_dispatch:  # Allows manual triggering of the workflow
 
 jobs:
