@@ -18,12 +18,6 @@ jobs:
       - name: Retrieve data from PostgreSQL
         env:
           DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
-          MAILTRAP_SERVER: ${{ MAILTRAP_SERVER }}
-          MAILTRAP_USERNAME: ${{ MAILTRAP_USERNAME }}
-          MAILTRAP_PASSWORD: ${{ MAILTRAP_PASSWORD }}
-          MAIL_PORT: ${{ MAIL_PORT }}
-          FROM_EMAIL: ${{ FROM_EMAIL }}
-          TO_EMAIL: ${{ TO_EMAIL }}
         run: |
           psql "postgres://postgres.fbsstbcuoxstmqjgqdwy:${DATABASE_PASSWORD}@aws-0-us-west-1.pooler.supabase.com:5432/postgres" -c "\COPY (SELECT * FROM get_weekly_reviews()) TO 'reviews.csv' WITH (FORMAT csv, DELIMITER '~');"
       - name: Upload reviews.csv to artifacts
@@ -56,6 +50,13 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run data processing script
+        env:
+          MAILTRAP_SERVER: ${{ MAILTRAP_SERVER }}
+          MAILTRAP_USERNAME: ${{ MAILTRAP_USERNAME }}
+          MAILTRAP_PASSWORD: ${{ MAILTRAP_PASSWORD }}
+          MAIL_PORT: ${{ MAIL_PORT }}
+          FROM_EMAIL: ${{ FROM_EMAIL }}
+          TO_EMAIL: ${{ TO_EMAIL }}
         run: python global_review.py
 
       - name: Upload processed files to artifacts
