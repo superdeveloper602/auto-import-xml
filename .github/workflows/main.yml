@@ -79,7 +79,7 @@ jobs:
 
       - name: Copy data into PostgreSQL
         env:
-          DATABASE_PASSWORD: ${{ secrets.DATABASE_POSTGRES_URI }}
+          DATABASE_POSTGRES_URI: ${{ secrets.DATABASE_POSTGRES_URI }}
         run: |
           psql "$DATABASE_POSTGRES_URI" -c "\COPY public.articles(title, content, issue_date) FROM 'temp_data.csv' WITH (FORMAT csv, DELIMITER '~');"
 
