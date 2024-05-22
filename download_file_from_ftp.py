@@ -50,7 +50,7 @@ def download_and_extract_files():
         with paramiko.SFTPClient.from_transport(transport) as sftp:
             sftp.chdir(remote_dir)
             file_list = sftp.listdir()
-            current_date = '2024-05-05'
+            current_date = '2024-05-19'
             print("current_date: ", current_date)
             files_to_download = []
             if is_testing == 'true':
