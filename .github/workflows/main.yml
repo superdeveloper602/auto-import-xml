@@ -1,4 +1,6 @@
 name: auto-import
+  schedule:
+    - cron: '0 3 * * 6'  # Runs at 3 AM UTC every Saturday
   workflow_dispatch:
 
 jobs:
