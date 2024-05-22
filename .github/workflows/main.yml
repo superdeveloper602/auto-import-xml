@@ -2,7 +2,7 @@ name: auto-import
 on:
   schedule:
     #Runs at 3 a.m every sunday
-    - cron: '0 3 * * 0'
+    ##- cron: '0 3 * * 0'
   workflow_dispatch:
 
 jobs:
