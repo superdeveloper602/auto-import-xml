@@ -79,6 +79,7 @@ jobs:
 
       - name: Copy data into PostgreSQL
         env:
-          DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
+          DATABASE_PASSWORD: ${{ secrets.DATABASE_POSTGRES_URI }}
         run: |
-          psql "postgres://postgres.fbsstbcuoxstmqjgqdwy:${DATABASE_PASSWORD}@aws-0-us-west-1.pooler.supabase.com:5432/postgres" -c "\COPY public.articles(title, content, issue_date) FROM 'temp_data.csv' WITH (FORMAT csv, DELIMITER '~');"
+          psql "$DATABASE_POSTGRES_URI" -c "\COPY public.articles(title, content, issue_date) FROM 'temp_data.csv' WITH (FORMAT csv, DELIMITER '~');"
+
