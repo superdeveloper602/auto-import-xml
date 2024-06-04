@@ -73,11 +73,15 @@ def import_xml_data(xml_file):
         tree = ET.parse(xml_file)
         root = tree.getroot()
         articles = process_articles(root)
-        write_to_csv(articles, 'temp_data.csv')
+        write_to_csv(articles, 'ftp-autoimport/temp_data.csv')
         return True
     except Exception as e:
         print(f'Failed to import XML data from {xml_file}: {e}, {e.__traceback__.tb_lineno}')
         return False
+
+def get_metadata_value(root, name):
+    for elem in root.findall(f'.//metadata[@name="{name}"]'):
+        return elem.get('value')
 
 def process_articles(root):
     try:
@@ -87,18 +91,30 @@ def process_articles(root):
             article_id = article.find(".//metadata[@name='ArticleId']").get('value')
             
             # Initialize variables to store the article name and content
-            article_name = None
+            article_name = ""
             content = ""
             
-            # First, gather all paragraph elements within the current article
-            paragraphs = article.findall('.//paragraph')
+            # Gather all header and paragraph elements within the current article
+            headers = article.findall('.//h1') + article.findall('.//h2') + article.findall('.//h3') + article.findall('.//h4') + article.findall('.//h5')
             
+            paragraphs = article.findall('.//paragraph')
+
+            section_value = get_metadata_value(root, 'Section')
+            print(f'Section value: {section_value}')
+
+            publication_value = get_metadata_value(root, 'Publication')
+            print(f'Publication value: {publication_value}')
+                
             issue_date = root.find(".//metadata[@name='Issuedate']").get('value')
             print(issue_date)
             sports_content = ""
             subheader = ""
             isJournaliste = False
-            # Process each paragraph
+
+            # Process each header and paragraph
+            for header in article.findall('.//h1'):
+                text = ''.join(header.itertext()).strip()
+                article_name += text + " "
             for i, p in enumerate(paragraphs):
                 text = ''.join(p.itertext()).strip()
                 style = p.get('style')
@@ -108,41 +124,27 @@ def process_articles(root):
                     subheader = text
                 elif style == "200_Texte_de_base%3a211_!_SIG_couleur_x07":
                     if i == 1 and text.startswith("Journaliste"):
-                        article_name = ""
                         isJournaliste = True
                         continue
-                elif style == "100_Titre_chapeau%3a131_!_TIT_15_sec_couleur_x04" and isJournaliste:
-                    article_name += text + " "
-                    continue
-                    
-                
-                first_word = ''
-                # Set the first paragraph as the article name, others as content
-                if i == 0:
-                    if not is_valid_french_date(text.strip()):
-                        article_name = text.strip()
-                    else:
-                        continue
-                else:
-                    # Append a space only if it's not the first content paragraph
-                    if i > 1:
-                        content += " "
-                    content += text
-            if (article_name == None):
-                continue
+                content += text + " "
+
             if article_name.lower() in excludedTextPhrases:
                 continue
             if article_name in multiplePartsTitle:
                 ### add the rest of logic
                 if i >= 1:
                     article_name += " " + subheader
-            if article_name == "En bref" or article_name == "En bref...":
-                article_name += " " + sports_content.strip()
-                articles.append({'title': article_name, 'content': content, 'issue_date': issue_date})
+            
+            if article_name.startswith("En bref") or article_name.startswith("En bref..."):
+                print("article_name"+ article_name)
+                article_name = ""
+                for header in headers:
+                    text = ''.join(header.itertext()).strip()
+                    article_name += text + " "
+                articles.append({'title': article_name, 'content': content, 'issue_date': issue_date, 'section': section_value, 'author': publication_value})
                 continue
-            # print(f'title: {article_name}, id: {article_id}')
-            # Only append the article if the name has more than one word
 
+            # Only append the article if the name has more than one word
             if len(article_name.split()) > 1:
                 # Check if the first word has an internal uppercase letter
                 temp = article_name
@@ -151,7 +153,9 @@ def process_articles(root):
                     split[0] = split_mixed_case(split[0])
                     tempFirst = ' '.join(split)
                     temp = tempFirst.strip()
-                articles.append({'title': temp, 'content': content, 'issue_date': issue_date})
+                if article_name.startswith('Page') or article_name.startswith('Le top 10'):
+                    continue
+                articles.append({'title': temp, 'content': content, 'issue_date': issue_date, 'section': section_value, 'author': publication_value})
         return articles
     except Exception as e:
         print(f'Error processing articles: {e} ,{e.__traceback__.tb_lineno}')
@@ -167,7 +171,7 @@ def extract_content(box):
 def write_to_csv(articles, file_path):
     # Determine if the file exists to decide if we need to write headers and to avoid duplicates
     file_exists = os.path.isfile(file_path)
-    
+
     existing_articles = set()
     # If file exists, load existing data to check for duplicates
     if file_exists:
@@ -177,12 +181,12 @@ def write_to_csv(articles, file_path):
                 reader = csv.DictReader(file, delimiter='~')
                 existing_articles = {frozenset(row.items()) for row in reader}
         except Exception as e:
-            print(f'Error reading existing CSV file: {e}')
+            print(f'Error reading existing CSV file: {e}, {e.__traceback__.tb_lineno}')
             return
 
     try:
         with open(file_path, mode='a', newline='', encoding='utf-8') as file:
-            fieldnames = ['title', 'content', 'issue_date']
+            fieldnames = ['title', 'content', 'issue_date', 'section', 'author']
             # Adjust the writer to use the custom delimiter
             writer = csv.DictWriter(file, fieldnames=fieldnames, delimiter='~')
             
@@ -191,16 +195,16 @@ def write_to_csv(articles, file_path):
 
             for article in articles:
                 
-                article_entry = {'title': article['title'], 'content': article['content'], 'issue_date': article['issue_date']}
+                article_entry = {'title': article['title'], 'content': article['content'], 'issue_date': article['issue_date'], 'section': article['section'], 'author': article['author']}
                 # Convert article entry to a frozen set of items for comparison
                 article_frozen = frozenset(article_entry.items())
-                
+
                 # Check if the article is already in the existing articles set
                 if article_frozen not in existing_articles:
                     writer.writerow(article_entry)
                     existing_articles.add(article_frozen)  # Add this new entry to the set to avoid future duplicates
     except Exception as e:
-        print(f'Error writing to CSV file: {e}')
+        print(f'Error writing to CSV file: {e}, {e.__traceback__.tb_lineno}')
 
 data_folder = './data'
 success_count = 0
