@@ -73,7 +73,7 @@ def import_xml_data(xml_file):
         tree = ET.parse(xml_file)
         root = tree.getroot()
         articles = process_articles(root)
-        write_to_csv(articles, 'ftp-autoimport/temp_data.csv')
+        write_to_csv(articles, 'temp_data.csv')
         return True
     except Exception as e:
         print(f'Failed to import XML data from {xml_file}: {e}, {e.__traceback__.tb_lineno}')
