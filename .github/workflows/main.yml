@@ -79,5 +79,5 @@ jobs:
         env:
           DATABASE_POSTGRES_URI: ${{ secrets.DATABASE_POSTGRES_URI }}
         run: |
-      psql "$DATABASE_POSTGRES_URI" -c "\COPY public.articles(title, content, issue_date, section, author) FROM 'temp_data.csv' WITH (FORMAT csv, DELIMITER '~');"
+          psql "$DATABASE_POSTGRES_URI" -c "\COPY public.articles(title, content, issue_date, section, author) FROM 'temp_data.csv' WITH (FORMAT csv, DELIMITER '~');"
 
