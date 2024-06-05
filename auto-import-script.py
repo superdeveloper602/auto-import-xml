@@ -150,7 +150,7 @@ def process_articles(root):
                     split[0] = split_mixed_case(split[0])
                     tempFirst = ' '.join(split)
                     temp = tempFirst.strip()
-                if article_name.startswith('Page'):
+                if article_name.startswith('Page') or  article_name.startswith('Leurs indispensables'):
                     continue
                 
                 # Check if the article name already exists in the articles list
