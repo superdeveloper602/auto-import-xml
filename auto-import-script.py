@@ -83,6 +83,7 @@ def get_metadata_value(root, name):
     for elem in root.findall(f'.//metadata[@name="{name}"]'):
         return elem.get('value')
 
+titles = []
 def process_articles(root):
     try:
         articles = []
@@ -96,7 +97,6 @@ def process_articles(root):
             
             # Gather all header and paragraph elements within the current article
             headers = article.findall('.//h1') + article.findall('.//h2') + article.findall('.//h3') + article.findall('.//h4') + article.findall('.//h5')
-            
             paragraphs = article.findall('.//paragraph')
 
             section_value = get_metadata_value(root, 'Section')
@@ -122,10 +122,6 @@ def process_articles(root):
                     sports_content += text + " "
                 elif style == "400_Actu_Eco%3a420_!_TIT_edito_x04":
                     subheader = text
-                # elif style == "200_Texte_de_base%3a211_!_SIG_couleur_x07":
-                #     if i == 1 and text.startswith("Journaliste"):
-                #         isJournaliste = True
-                #         continue
                 content += text + " "
 
             if article_name.lower() in excludedTextPhrases:
@@ -141,6 +137,7 @@ def process_articles(root):
                 for header in headers:
                     text = ''.join(header.itertext()).strip()
                     article_name += text + " "
+                titles.append(article_name)
                 articles.append({'title': article_name, 'content': content, 'issue_date': issue_date, 'section': section_value, 'author': publication_value})
                 continue
 
@@ -155,11 +152,39 @@ def process_articles(root):
                     temp = tempFirst.strip()
                 if article_name.startswith('Page'):
                     continue
-                articles.append({'title': temp, 'content': content.replace(temp, '', 1), 'issue_date': issue_date, 'section': section_value, 'author': publication_value})
+                
+                # Check if the article name already exists in the articles list
+                existing_article = article_exists(titles, article_name)
+                if existing_article:
+                    print(f'Duplicate article found: {article_name}')
+                    old_article = article_name
+                    # Extract the text before the first comma in the content
+                    before_special_char = re.split(r'[,.!?;:]', content, maxsplit=1)[0]
+                    # Append the text before the first comma to the article name
+                    if article_name.startswith('Petit Plus Planète'):
+                        article_name = before_special_char
+                    else:
+                        article_name = ""
+                        for header in headers:
+                            text = ''.join(header.itertext()).strip()
+                            article_name += text + " "
+                    print(f'Updated article name: {article_name}')
+                    # Remove the first occurrence of the original article name from the content
+                    content = content.replace(old_article, '', 1)
+                    temp = article_name
+
+                titles.append(temp)
+                articles.append({'title': temp.strip(), 'content': content.replace(article_name.strip(), '', 1), 'issue_date': issue_date, 'section': section_value, 'author': publication_value})
         return articles
     except Exception as e:
         print(f'Error processing articles: {e} ,{e.__traceback__.tb_lineno}')
 
+
+def article_exists(titles, article_name):
+    for article in titles:
+        if article == article_name.strip() :
+            return article
+    return None
 
 def extract_content(box):
     contents = []
