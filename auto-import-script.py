@@ -122,10 +122,10 @@ def process_articles(root):
                     sports_content += text + " "
                 elif style == "400_Actu_Eco%3a420_!_TIT_edito_x04":
                     subheader = text
-                elif style == "200_Texte_de_base%3a211_!_SIG_couleur_x07":
-                    if i == 1 and text.startswith("Journaliste"):
-                        isJournaliste = True
-                        continue
+                # elif style == "200_Texte_de_base%3a211_!_SIG_couleur_x07":
+                #     if i == 1 and text.startswith("Journaliste"):
+                #         isJournaliste = True
+                #         continue
                 content += text + " "
 
             if article_name.lower() in excludedTextPhrases:
@@ -153,9 +153,9 @@ def process_articles(root):
                     split[0] = split_mixed_case(split[0])
                     tempFirst = ' '.join(split)
                     temp = tempFirst.strip()
-                if article_name.startswith('Page') or article_name.startswith('Le top 10'):
+                if article_name.startswith('Page'):
                     continue
-                articles.append({'title': temp, 'content': content, 'issue_date': issue_date, 'section': section_value, 'author': publication_value})
+                articles.append({'title': temp, 'content': content.replace(temp, '', 1), 'issue_date': issue_date, 'section': section_value, 'author': publication_value})
         return articles
     except Exception as e:
         print(f'Error processing articles: {e} ,{e.__traceback__.tb_lineno}')
